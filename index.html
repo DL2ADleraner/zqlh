@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>“智启职航”
+
+        全国乡村青少年职业启蒙路径探索的 AI 引擎</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: url('/static/images/123.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        .preview {
+            max-width: 300px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .dog { background-color: #ffe6e6; }
+        .cat { background-color: #e6ffe6; }
+        .error { background-color: #ffe6e6; color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <h1>“智启职航”
+
+        全国乡村青少年职业启蒙路径探索的 AI 引擎</h1>
+
+    <!-- 文件上传表单 -->
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="imageInput" name="image" accept="image/*" required>
+        <button type="submit">开始预测</button>
+    </form>
+
+    <!-- 加载提示 -->
+    <div class="loading" id="loading">
+        <p>🔍 正在分析中，请稍候...</p>
+    </div>
+
+    <!-- 结果显示区域 -->
+    <div id="result"></div>
+
+    <!-- 图片预览 -->
+    <img id="preview" class="preview" src="#" alt="图片预览">
+
+    <script>
+        // 获取DOM元素
+        const form = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const loading = document.getElementById('loading');
+        const resultDiv = document.getElementById('result');
+
+        // 图片预览功能
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 表单提交处理
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 检查是否选择了文件
+            if (!imageInput.files[0]) {
+                alert('请选择要上传的图片');
+                return;
+            }
+
+            // 准备表单数据
+            const formData = new FormData(form);
+
+            try {
+                // 显示加载状态
+                loading.style.display = 'block';
+                resultDiv.innerHTML = '';
+
+                // 发送预测请求
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // 解析响应数据
+                const data = await response.json();
+
+                // 处理响应结果
+                if (data.status === 'success') {
+                    showResult(data.class, data.confidence);
+                } else {
+                    showError('预测失败：' + data.error);
+                }
+
+            } catch (error) {
+                showError('网络错误：' + error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        // 显示成功结果
+        function showResult(className, confidence) {
+            resultDiv.innerHTML = `
+                <div class="${className}">
+                    <h3>🐶 ${className.toUpperCase()} 🐱</h3>
+                    <p>置信度：${confidence}%</p>
+                </div>
+            `;
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            resultDiv.innerHTML = `
+                <div class="error">
+                    <h3>❌ 预测失败</h3>
+                    <p>${message}</p>
+                    <p>请检查图片格式（支持JPG/PNG）后重试</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
